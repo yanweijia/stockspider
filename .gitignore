@@ -9,9 +9,11 @@
 # Session
 Session.vim
 
+.coding-ide/
 # Temporary
 .netrwhist
 *~
+stockspider/
 # Auto-generated tag files
 tags
 ### Eclipse template
