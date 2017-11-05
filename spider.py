@@ -4,7 +4,7 @@
 # Python-第三方库requests详解  http://blog.csdn.net/shanzhizi/article/details/50903748
 
 
-import requests, threading, json, logging
+import requests, threading, json, logging, sys
 import save_util
 
 headers = {
@@ -20,10 +20,10 @@ headers = {
 }
 
 
-def main():
-    save_util.clear_table()  # 清空相关表信息
-    for i in range(000000, 999999, 1):
-        symbol = 'SH' + str(i).zfill(6)
+def main(symbol_prefix='SH', start_code=000000, end_code=999999):
+    save_util.create_and_clear_table()  # 创建表并清空相关表信息
+    for i in range(start_code, end_code, 1):
+        symbol = symbol_prefix + str(i).zfill(6)
         params = {'symbol': symbol}
         res = requests.get("https://xueqiu.com/stock/f10/compinfo.json", params=params, headers=headers, timeout=10000,
                            verify=False)
@@ -42,4 +42,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    symbol_prefix = sys.argv[1] if sys.argv[1] is not None else 'SH'
+    start_code = int(sys.argv[2]) if sys.argv[2] is not None else 000000
+    end_code = int(sys.argv[3]) if sys.argv[3] is not None else 999999
+    main(symbol_prefix, start_code, end_code)
