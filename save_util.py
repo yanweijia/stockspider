@@ -36,6 +36,10 @@ def save_stock_compinfo(symbol, info):
             print '插入行业信息失败,原因: ', arguement
         industry_str += industryinfo['level2code'] + ','
     try:
+        #先插入股票代码对应信息,再插入公司信息
+        sql = "INSERT INTO `stock_company` (`compcode`,`symbol`)VALUES(%s,%s)"
+        mysql.insert_one(sql, (info['compcode'], symbol))
+
         sql = "INSERT INTO `company_info` (`compcode`, `compname`, `engname`, `comptype1`, `comptype2`, `founddate`, `orgtype`, `regcapital`, `authcapsk`, `chairman`, `manager`, `legrep`, `bsecretary`, `bsecretarytel`, `basecretaryfax`, `seaffrepr`, `seagttel`, `seagtfax`, `seagtemail`, `authreprsbd`, `leconstant`, `accfirm`, `regaddr`, `officeaddr`, `officezipcode`, `comptel`, `compfax`, `compemail`, `compurl`, `servicetel`, `servicefax`, `compintro`, `bizscope`, `majorbiz`, `bizscale`, `compsname`, `region`, `regptcode`, `listdate`, `issprice`, `onlactissqty`, `actissqty`, `boardmap_list`, `industry_list`)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         mysql.insert_one(sql, (
             info['compcode'], info['compname'], info['engname'], info['comptype1'], info['comptype2'],
@@ -53,8 +57,6 @@ def save_stock_compinfo(symbol, info):
             if (info['listdate'] is not None) else None, info['issprice'],
             info['onlactissqty'],
             info['actissqty'], boardmap_str, industry_str))
-        sql = "INSERT INTO `stock_company` (`compcode`,`symbol`)VALUES(%s,%s)"
-        mysql.insert_one(sql, (info['compcode'], symbol))
         mysql.commit()
     except BaseException, arguement:
         if str(arguement).find("Duplicate") == -1:  # 如果错误不是主键重复,提示用户

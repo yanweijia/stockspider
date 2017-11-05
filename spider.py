@@ -25,7 +25,8 @@ def main():
     for i in range(000000, 999999, 1):
         symbol = 'SH' + str(i).zfill(6)
         params = {'symbol': symbol}
-        res = requests.get("https://xueqiu.com/stock/f10/compinfo.json", params=params, headers=headers, timeout=10000)
+        res = requests.get("https://xueqiu.com/stock/f10/compinfo.json", params=params, headers=headers, timeout=10000,
+                           verify=False)
         if (res.status_code == 200):
             tqCompInfo = json.loads(res.content, encoding='utf-8')['tqCompInfo']
             if tqCompInfo == None:
