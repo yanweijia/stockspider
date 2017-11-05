@@ -66,6 +66,7 @@ def save_stock_compinfo(symbol, info):
 def clear_table():
     mysql = MySqlConn.Mysql()
     try:
+        mysql.delete("DELETE FROM company_info", ())
         mysql.delete("DELETE FROM stock_company", ())
         mysql.delete("DELETE FROM board_info", ())
         mysql.delete("DELETE FROM industry_info", ())
