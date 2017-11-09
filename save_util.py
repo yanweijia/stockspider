@@ -17,13 +17,13 @@ def save_stock_compinfo(symbol, info):
     industry_str = ''
     for boardinfo in info['tqCompBoardmapList']:  # 记录股票所属板块
         try:
-            mysql.insert_one(sql_template.INSERT_INTO_BORAD_INFO, (
+            mysql.insert_one(sql_template.INSERT_INTO_BOARD_INFO, (
                 boardinfo['keycode'], boardinfo['keyname'], boardinfo['keynameacronym'], boardinfo['boardcode'],
                 boardinfo['boardname']))
             mysql.commit()
         except BaseException, arguement:
-
-            print '插入板块信息失败,原因: ', arguement
+            if str(arguement).find("Duplicate") == -1:
+                print '插入板块信息失败,原因: ', arguement
         boardmap_str += boardinfo['keycode'] + ','
     for industryinfo in info['tqCompIndustryList']:  # 记录股票所属行业
         try:
@@ -32,7 +32,8 @@ def save_stock_compinfo(symbol, info):
                 industryinfo['compcode']))
             mysql.commit()
         except BaseException, arguement:
-            print '插入行业信息失败,原因: ', arguement
+            if str(arguement).find("Duplicate") == -1:
+                print '插入行业信息失败,原因: ', arguement
         industry_str += industryinfo['level2code'] + ','
     try:
         # 插入公司信息
@@ -90,7 +91,8 @@ def save_stock_compinfo(symbol, info):
         # 插入股票代码和公司对应信息表
         mysql.insert_one(sql_template.INSERT_INTO_STOCK_COMPANY, (info['compcode'], symbol))
     except BaseException, arguement:
-        print '插入股票代码对应公司信息失败,信息为: ', str(arguement)
+        if str(arguement).find("Duplicate") == -1:
+            print '插入股票代码对应公司信息失败,信息为: ', str(arguement)
     finally:
         mysql.dispose()
 
