@@ -97,9 +97,51 @@ def save_stock_compinfo(symbol, info):
         mysql.dispose()
 
 
-def create_and_clear_table():
+def save_stock_history(symbol, chart_list):
     """
-    创建数据库,创建相关数据表,并清空其中的信息
+        保存股票历史信息
+
+        :param symbol: 股票代码
+        :param chart_list: 历史数据
+        :return:
+        """
+    mysql = MySqlConn.Mysql()
+    try:
+        for item in chart_list:
+            mysql.insert_one(sql_template.INSERT_INTO_STOCK_HISTORY, (
+                symbol,
+                item.get('volume', None),
+                item.get('open', None),
+                item.get('high', None),
+                item.get('close', None),
+                item.get('low', None),
+                item.get('chg', None),
+                item.get('percent', None),
+                item.get('turnrate', None),
+                item.get('ma5', None),
+                item.get('ma10', None),
+                item.get('ma20', None),
+                item.get('ma30', None),
+                item.get('dif', None),
+                item.get('dea', None),
+                item.get('macd', None),
+                item.get('lot_volumn', None),
+                None if (item.get('timestamp', None) is None) else time.strftime('%Y-%m-%d %H:%M',
+                                                                                 time.localtime(
+                                                                                     item.get('timestamp',
+                                                                                              None) / 1000)),
+                item.get('time', None)
+            ))
+            mysql.commit()
+    except BaseException, arguement:
+        print '插入信息失败,原因: ', arguement
+    finally:
+        mysql.dispose()
+
+
+def create_database():
+    """
+    创建数据库
 
     :return:
     """
@@ -107,18 +149,81 @@ def create_and_clear_table():
     try:
         mysql.update(sql_template.CREATE_DATABASE_STOCK, ())
         mysql.update(sql_template.USE_DATABASE_STOCK, ())
+        mysql.commit()
+    except BaseException, arguement:
+        print 'create_database失败,信息: ', arguement
+    finally:
+        mysql.dispose()
 
+
+def create_company_info_table():
+    """
+    创建表
+
+    :return:
+    """
+    mysql = MySqlConn.Mysql()
+    try:
+        create_database()
         mysql.update(sql_template.CREATE_TABLE_BOARD_INFO, ())
         mysql.update(sql_template.CREATE_TABLE_INDUSTRY_INFO, ())
         mysql.update(sql_template.CREATE_TABLE_COMPANY_INFO, ())
         mysql.update(sql_template.CREATE_TABLE_STOCK_COMPANY, ())
 
+        mysql.commit()
+    except BaseException, arguement:
+        print '删除表失败,信息: ', arguement
+    finally:
+        mysql.dispose()
+
+
+def clean_company_info_table():
+    """
+    清空其中的信息
+
+    :return:
+    """
+    mysql = MySqlConn.Mysql()
+    try:
         mysql.delete(sql_template.CLEAN_TABLE_COMPANY_INFO, ())
         mysql.delete(sql_template.CLEAN_TABLE_STOCK_COMPANY, ())
         mysql.delete(sql_template.CLEAN_TABLE_BOARD_INFO, ())
         mysql.delete(sql_template.CLEAN_TABLE_INDUSTRY_INFO, ())
         mysql.commit()
     except BaseException, arguement:
-        print '删除表失败,信息: ', arguement
+        print '清空表失败,信息: ', arguement
+    finally:
+        mysql.dispose()
+
+
+def create_stock_history_table():
+    """
+    创建相关数据表
+
+    :return:
+    """
+    mysql = MySqlConn.Mysql()
+    try:
+        create_database()
+        mysql.update(sql_template.CREATE_TABLE_STOCK_HISTORY, ())
+
+    except BaseException, arguement:
+        print '创建表失败,信息: ', arguement
+    finally:
+        mysql.dispose()
+
+
+def clean_stock_history_table():
+    """
+    清空其中的信息
+
+    :return:
+    """
+    mysql = MySqlConn.Mysql()
+    try:
+        mysql.delete(sql_template.CLEAN_TABLE_STOCK_HISTORY, ())
+
+    except BaseException, arguement:
+        print '清空表失败,信息: ', arguement
     finally:
         mysql.dispose()

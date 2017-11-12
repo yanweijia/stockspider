@@ -22,7 +22,7 @@ headers = {
 }
 
 
-def spider_company(symbol_prefix='SH', start_code=000000, end_code=999999, clean_db=False, verify_website=False):
+def spider_company_info(symbol_prefix='SH', start_code=000000, end_code=999999, clean_db=False, verify_website=False):
     """
     抓取上市公司信息,对应股票代码来抓取
 
@@ -33,8 +33,9 @@ def spider_company(symbol_prefix='SH', start_code=000000, end_code=999999, clean
     :param verify_website: 是否验证 https 网站
     :return:
     """
+    save_util.create_company_info_table()
     if clean_db:
-        save_util.create_and_clear_table()  # 创建表并清空相关表信息
+        save_util.clean_company_info_table()  # 清空相关表信息
     for i in range(start_code, end_code, 1):
         symbol = symbol_prefix + str(i).zfill(6)
         params = {'symbol': symbol}
@@ -58,8 +59,61 @@ def spider_company(symbol_prefix='SH', start_code=000000, end_code=999999, clean
             print "爬取失败: ", str(arguement)
 
 
+def spider_stock_history(symbol_prefix='SH', start_code=000000, end_code=999999, clean_db=False, verify_website=False):
+    """
+    爬取股票历史信息
+
+    :param symbol_prefix: 股票代码前缀,分类
+    :param start_code: 开始爬虫的股票代码
+    :param end_code: 结束爬虫的股票代码
+    :param clean_db: 是否清空数据库并重新建表
+    :param verify_website: 是否验证 https 网站
+    :return:
+    """
+    save_util.create_stock_history_table()
+    if clean_db:
+        save_util.clean_stock_history_table()
+    for i in range(start_code, end_code, 1):
+        symbol = symbol_prefix + str(i).zfill(6)
+        params = {'symbol': symbol,
+                  'period': "1day",
+                  "type": "normal",
+                  "begin": "10000",
+                  "end": "1957539200000"}  # 开始结束时间
+        try:
+            res = requests.get("https://xueqiu.com/stock/forchartk/stocklist.json", params=params, headers=headers,
+                               timeout=10000, verify=verify_website)
+            if res.status_code == 200:
+                json_info = json.loads(res.content, encoding='utf-8')
+                if json_info is None:
+                    print '无此编号:' + symbol
+                else:
+                    if json_info.get('success') == 'true':
+                        save_util.save_stock_history(symbol, json_info.get('chartlist', None))
+                        print '成功下载编号为: ', symbol, ' 的股票历史信息,数据量:', str(len(json_info.get('chartlist', None))), '条'
+                    else:
+                        print '编号:', symbol, '的股票历史信息下载失败'
+            else:
+                print "下载错误,download fail, http response code is:" + res.status_code
+                print res.headers
+                print res
+                break
+        except BaseException, arguement:
+            print '爬虫失败: ', str(arguement)
+
+
+def spider_stock_realtime():
+    """
+    爬取股票实时数据
+
+    :return:
+    """
+    print '暂未做此功能,网址为 https://xueqiu.com/v4/stock/quote.json?code=SH600148 ,请自行实现'
+
+
 def print_help():
     print ' stock_spider 使用方法:'
+    print '\t 使用前请先修改config.py文件,确保数据库可以正确连接,使用的是单线程,如果需要多线程提高效率请实现自行实现thread,高速爬取可能会造成服务器屏蔽ip,可以使用代理,每个代理进入页面渲染后生成对应的cookie.'
     print ' 参数说明:'
     print '\t --type 爬取种类, companyinfo 为公司信息(默认),stockhistory 为股票历史数据, stockrealtime 为股票实时数据'
     print '\t --symbol=SH 为上证,SZ为深证,默认SH'
@@ -69,7 +123,8 @@ def print_help():
     print '\t -v 是否验证https链接,默认False'
     print '\t --code=600148  爬取SH600148的信息,仅爬取当前股票,会忽略-s -e 参数'
     print ' 爬取公司信息:'
-    print '\t python spider.py --type=companyinfo --symbol=SH -s 600000 -e 602999 -c False -v True'
+    print '\t python spider.py --type=companyinfo --symbol=SH --code=600148 -c False -v True'
+    print '\t 或 python spider.py --type=companyinfo --symbol=SH -s 600000 -e 602999 -c False -v True'
     print ' 爬取股票历史信息:'
     print '\t python spider.py --type=stockhistory --symbol=SH --code=600148 -c False -v True'
     print '\t 或 python spider.py --type=stockhistory --symbol=SH -s 600000 -e 600299 -c False -v True'
@@ -82,12 +137,13 @@ if __name__ == '__main__':
     # 预定义值:
     spider_type = 'companyinfo'
     symbol_prefix = 'SH'
+    stock_code = None
     start_code = 000000
     end_code = 999999
     clean_db = False
     verify_website = False
     # 参考:Python 获得命令行参数的方法  http://www.cnblogs.com/saiwa/articles/5253713.html
-    opts, args = getopt.getopt(sys.argv[1:], "s:e:c:v:", ["help", "type=", "symbol="])
+    opts, args = getopt.getopt(sys.argv[1:], "s:e:c:v:", ["help", "type=", "symbol=", "code="])
     for op, value in opts:
         if op == "--type":
             spider_type = value
@@ -96,6 +152,8 @@ if __name__ == '__main__':
         elif op == "--help":
             print_help()
             sys.exit(0)
+        elif op == "--code":
+            stock_code = int(value)
         elif op == "-s":
             start_code = int(value)
         elif op == "-e":
@@ -105,13 +163,19 @@ if __name__ == '__main__':
         elif op == "-v":
             verify_website = bool(verify_website)
 
+    if (stock_code is not None):  # 计算开始爬取和结束爬取的位置
+        start_code = stock_code
+        end_code = stock_code + 1
+
     if spider_type == 'companyinfo':
         print '开始抓取股票公司信息...'
-        spider_company(symbol_prefix, start_code, end_code, clean_db, verify_website)
+        spider_company_info(symbol_prefix, start_code, end_code, clean_db, verify_website)
     elif spider_type == 'stockhistory':
         print '开始抓取历史信息...'
+        spider_stock_history(symbol_prefix, start_code, end_code, clean_db, verify_website)
     elif spider_type == 'stockrealtime':
         print '开始抓取股票实时信息...'
+        spider_stock_realtime()
     else:
         print '无法识别输入的符号: --type=', spider_type
         sys.exit(-1)

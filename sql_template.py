@@ -84,6 +84,32 @@ CREATE_TABLE_STOCK_COMPANY = """
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='股票代码公司对应信息';
 """
 
+# 创建 stock_history 表
+CREATE_TABLE_STOCK_HISTORY = """
+    CREATE TABLE IF NOT EXISTS `stock_history` (
+          `symbol` varchar(8) NOT NULL DEFAULT '' COMMENT '股票代码',
+          `volume` bigint(10) unsigned DEFAULT NULL,
+          `open` decimal(10,2) DEFAULT NULL COMMENT '开盘价',
+          `high` decimal(10,2) DEFAULT NULL COMMENT '最高价',
+          `close` decimal(10,2) DEFAULT NULL COMMENT '收盘价',
+          `low` decimal(10,2) DEFAULT NULL COMMENT '最低价',
+          `chg` decimal(10,2) DEFAULT NULL,
+          `percent` decimal(10,2) DEFAULT NULL COMMENT '涨跌幅百分比',
+          `turnrate` decimal(10,2) DEFAULT NULL,
+          `ma5` decimal(10,2) DEFAULT NULL COMMENT 'MA5日线',
+          `ma10` decimal(10,2) DEFAULT NULL COMMENT 'MA10日线',
+          `ma20` decimal(10,2) DEFAULT NULL COMMENT 'MA20日线', 
+          `ma30` decimal(10,2) DEFAULT NULL COMMENT 'MA30日线',
+          `dif` decimal(10,2) DEFAULT NULL COMMENT 'diff',
+          `dea` decimal(10,2) DEFAULT NULL COMMENT 'dea',
+          `macd` decimal(10,0) DEFAULT NULL,
+          `lot_volume` int(11) unsigned DEFAULT NULL,
+          `timestamp` date NOT NULL COMMENT '日期',
+          `time` varchar(30) DEFAULT NULL COMMENT '日期字符串',
+          PRIMARY KEY (`symbol`,`timestamp`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='股票历史信息';
+"""
+
 # 清空 stock_company 表
 CLEAN_TABLE_STOCK_COMPANY = "DELETE FROM `stock_company`"
 # 清空 board_info 表
@@ -92,6 +118,8 @@ CLEAN_TABLE_BOARD_INFO = "DELETE FROM `board_info`"
 CLEAN_TABLE_INDUSTRY_INFO = "DELETE FROM `industry_info`"
 # 清空company_info 表
 CLEAN_TABLE_COMPANY_INFO = "DELETE FROM `company_info`"
+# 清空 stock_history 表
+CLEAN_TABLE_STOCK_HISTORY = "DELETE FROM `stock_history`"
 
 # 插入数据到 industry_info 表
 INSERT_INTO_INDUSTRY_INFO = "INSERT INTO `industry_info` (`level2code`, `level2name`, `level2nameacronym`, `compcode`)VALUES(%s,%s,%s,%s)"
@@ -101,3 +129,5 @@ INSERT_INTO_COMPANY_INFO = "INSERT INTO `company_info` (`compcode`, `compname`, 
 INSERT_INTO_BOARD_INFO = "INSERT INTO `board_info` (`keycode`, `keyname`, `keynameacronym`, `boardcode`, `boardname`)VALUES(%s,%s,%s,%s,%s)"
 # 插入数据到 stock_company 表
 INSERT_INTO_STOCK_COMPANY = "INSERT INTO `stock_company` (`compcode`,`symbol`)VALUES(%s,%s)"
+# 插入数据到 stock_history 表
+INSERT_INTO_STOCK_HISTORY = "INSERT INTO `stock_history` (`symbol`, `volume`, `open`, `high`, `close`, `low`, `chg`, `percent`, `turnrate`, `ma5`, `ma10`, `ma20`, `ma30`, `dif`, `dea`, `macd`, `lot_volume`, `timestamp`, `time`)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
