@@ -1,6 +1,7 @@
 # Python Learning for Stock Spider
 
 Author:[严唯嘉](http://www.yanweijia.cn)
+DataSource: 雪球 https://xueqiu.com/
 
 ## 使用说明:
 使用 python spider.py --help 来获取帮助信息
